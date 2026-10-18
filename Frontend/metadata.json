@@ -1,0 +1,6 @@
+{
+  "name": "Khet Rakshak",
+  "description": "An AI-powered crop health monitoring and drone service platform designed for Indian farmers and drone operators.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
