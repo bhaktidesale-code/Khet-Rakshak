@@ -20,13 +20,13 @@ import { translations } from './translations';
 // Custom Core Components
 import Navigation from './components/Navigation';
 import LandingPage from './components/LandingPage';
+import CropHealthWorkflow from './components/CropHealthWorkflow';
 import AuthPage from './components/AuthPage';
 import ProfileSetup from './components/ProfileSetup';
 import FarmSetup, { EmptyFarmState } from './components/FarmSetup';
 import AdminAccessManagement from './components/AdminAccessManagement';
 import BookingFlow from './components/BookingFlow';
 import BookingManagement from './components/BookingManagement';
-import DroneAnalysis from './components/DroneAnalysis';
 import SensorDashboard from './components/SensorDashboard';
 import CropAdvisory from './components/CropAdvisory';
 import ExpertConsultation from './components/ExpertConsultation';
@@ -64,7 +64,7 @@ function hasCompleteProfile(user: AppUser) {
 }
 
 function isViewAllowed(view: string, role: AppRole) {
-  if (view === 'home' || view === 'login' || view === 'profile-setup') return true;
+  if (view === 'home' || view === 'login' || view === 'profile-setup' || view === 'crop-demo') return true;
   if (role === 'FARMER') {
     return [
       'dashboard', 'farms', 'register', 'booking-flow', 'bookings-list',
@@ -265,7 +265,9 @@ export default function App() {
           if (!user.fullName || !user.village) {
             setCurrentView('profile-setup');
           } else if (currentViewRef.current === 'home' || currentViewRef.current === 'login') {
-            setCurrentView(destinationForRole(user.role));
+            const intended = intendedDestination.current;
+            intendedDestination.current = null;
+            setCurrentView(intended && isViewAllowed(intended, user.role) ? intended : destinationForRole(user.role));
           }
         })
         .catch((error: unknown) => {
@@ -332,11 +334,17 @@ export default function App() {
       }
       return;
     }
-    setCurrentView(destinationForRole(user.role));
+    const intended = intendedDestination.current;
+    intendedDestination.current = null;
+    setCurrentView(intended && isViewAllowed(intended, user.role) ? intended : destinationForRole(user.role));
   };
 
   const handleNavigate = (view: string) => {
     if (view === 'login' || view === 'home') {
+      setCurrentView(view);
+      return;
+    }
+    if (view === 'crop-demo') {
       setCurrentView(view);
       return;
     }
@@ -354,6 +362,17 @@ export default function App() {
       return;
     }
     setCurrentView(view);
+  };
+
+  const handleCropAnalysisAccessRequest = () => {
+    if (!authUser || !identity) {
+      intendedDestination.current = 'crop-demo';
+      setCurrentView('login');
+      return;
+    }
+    if (authUser.role !== 'FARMER') {
+      setCurrentView('forbidden');
+    }
   };
 
   const handleLogout = async () => {
@@ -442,8 +461,39 @@ export default function App() {
           />
         )}
 
+        {!authLoading && (currentView === 'crop-demo' || (currentView === 'drone-analysis' && authUser?.role === 'FARMER')) && (
+          <section className="mx-auto max-w-4xl space-y-5 rounded-3xl border border-[#7b8d80] bg-white p-5 dark:border-[#536458] dark:bg-[#1b2920] sm:p-8" aria-labelledby="crop-demo-title">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h1 id="crop-demo-title" className="text-2xl font-bold text-[#17251c] dark:text-white sm:text-3xl">Crop Image Health Check</h1>
+                <p className="mt-2 max-w-2xl text-base leading-7 text-[#465449] dark:text-[#c2cec3]">
+                  Choose an original cotton or turmeric dataset photo, or upload your own. The current service checks image readability only; no disease diagnosis is available.
+                </p>
+              </div>
+              <button
+                type="button"
+                  onClick={() => handleNavigate(authUser?.role === 'FARMER' ? 'dashboard' : 'home')}
+                className="rounded-xl border border-[#176b3a] px-4 py-2 font-semibold text-[#174c2c] hover:bg-[#f1f7f1] dark:text-[#a5e8b5] dark:hover:bg-[#23372a]"
+              >
+                Back to home
+              </button>
+            </div>
+            <CropHealthWorkflow
+              identity={identity}
+              canAnalyze={Boolean(identity && authUser?.role === 'FARMER')}
+              onRequestAccess={handleCropAnalysisAccessRequest}
+            />
+          </section>
+        )}
+
         {!authLoading && currentView === 'login' && (
-          <AuthPage onAuthenticated={handleAuthenticated} onBack={() => setCurrentView('home')} />
+          <AuthPage
+            onAuthenticated={handleAuthenticated}
+            onBack={() => {
+              intendedDestination.current = null;
+              setCurrentView('home');
+            }}
+          />
         )}
 
         {!authLoading && currentView === 'profile-setup' && identity && (
@@ -546,10 +596,6 @@ export default function App() {
             )}
 
             {/* 5. AI Drone Analysis & Compare screen */}
-            {currentView === 'drone-analysis' && (
-              <UnavailableFeature title="Crop health reports" detail="No scan reports are available. Drone image upload and crop analysis are not connected, so this page will not show a prediction." />
-            )}
-
             {/* 6. Live Soil Ground Sensors Cockpit */}
             {currentView === 'sensors' && (
               <UnavailableFeature title="Field readings" detail="Sensor readings are not connected for this farm." />

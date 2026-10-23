@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ClipboardCheck, Leaf, MapPinned, Sprout } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../translations';
+import CropImageGallery from './CropImageGallery';
 
 interface LandingPageProps {
   currentLanguage: Language;
@@ -28,6 +29,13 @@ export default function LandingPage({ currentLanguage, onNavigate }: LandingPage
           <p className="mt-4 max-w-2xl text-lg leading-8 text-[#465449] dark:text-[#c2cec3]">{t.landing_subtitle}</p>
           <button onClick={() => onNavigate('login')} className="mt-7 min-h-12 w-full rounded-xl bg-[#176b3a] px-6 py-3 text-lg font-bold text-white hover:bg-[#12532d] sm:w-auto">
             {t.landing_action}
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigate('crop-demo')}
+            className="mt-3 min-h-12 w-full rounded-xl bg-[#9a4b12] px-6 py-3 text-lg font-bold text-white hover:bg-[#7d3d0f] sm:ml-3 sm:mt-7 sm:w-auto"
+          >
+            Try Crop Health Demo
           </button>
         </div>
         <div className="rounded-2xl border border-[#7b8d80] bg-[#f7f9f5] p-6 dark:border-[#536458] dark:bg-[#111a14] sm:p-8">
@@ -64,22 +72,12 @@ export default function LandingPage({ currentLanguage, onNavigate }: LandingPage
             </div>
           </div>
 
-          <div className="relative flex min-h-64 items-center justify-center overflow-hidden bg-[#e9f3e9] p-6 dark:bg-[#203629] sm:min-h-80 sm:p-10" aria-hidden="true">
-            <svg viewBox="0 0 520 360" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid slice">
-              <rect width="520" height="360" fill="#e9f3e9" />
-              <circle cx="405" cy="76" r="34" fill="#f4cc75" />
-              <path d="M0 183 Q108 115 222 181 T520 161 V360 H0Z" fill="#9dc99a" />
-              <path d="M0 227 Q117 160 248 227 T520 208 V360 H0Z" fill="#5d9a63" />
-              <path d="M0 278 Q130 224 260 279 T520 264 V360 H0Z" fill="#347548" />
-              <g fill="none" stroke="#d8e7b0" strokeWidth="5" opacity=".9">
-                <path d="M-20 333 Q130 247 260 332 T540 317" />
-                <path d="M-20 357 Q130 271 260 356 T540 341" />
-              </g>
-            </svg>
-            <div className="relative flex h-28 w-28 items-center justify-center rounded-full border-4 border-white bg-[#176b3a] text-white shadow-lg sm:h-36 sm:w-36">
-              <ActiveDemoIcon aria-hidden="true" className="h-14 w-14 sm:h-16 sm:w-16" />
+          <div className="min-w-0 bg-[#e9f3e9] p-4 dark:bg-[#203629] sm:p-6 lg:p-8">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-semibold text-[#174c2c] shadow-sm dark:bg-[#111a14] dark:text-[#a5e8b5]">
+              <ActiveDemoIcon aria-hidden="true" className="h-4 w-4" />
+              {demoSteps[demoStep].title}
             </div>
-            <div className="absolute bottom-4 left-4 rounded-lg bg-white/95 px-3 py-2 text-sm font-semibold text-[#17251c] shadow-sm">{demoSteps[demoStep].title}</div>
+            <CropImageGallery />
           </div>
         </div>
       </section>

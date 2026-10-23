@@ -54,6 +54,31 @@ export interface OperatorAssignment {
   status: string;
 }
 
+export type CropType = 'cotton' | 'turmeric' | 'other' | 'unknown';
+export type CropTypeSource = 'user_selected' | 'filename_hint' | 'unknown';
+
+export interface CropAnalysis {
+  id: string;
+  createdAt: string;
+  filename: string;
+  fileSizeBytes: number;
+  cropType: CropType;
+  cropTypeSource: CropTypeSource;
+  image: {
+    format: string;
+    width: number;
+    height: number;
+    qualityStatus: 'readable' | 'warning';
+    warnings: string[];
+  };
+  analysisStatus: 'model_unavailable' | 'unsupported_crop';
+  resultType: 'image_quality_only';
+  prediction: null;
+  confidence: null;
+  model: null;
+  warnings: string[];
+}
+
 const apiUrl = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000' : '')).replace(/\/+$/, '');
 
 function requireAuth() {
@@ -109,6 +134,32 @@ export async function getOperatorAssignments(user: User) {
   return authenticatedRequest<{ assignments: OperatorAssignment[] }>('/api/operator/assignments', user);
 }
 
+export async function submitCropImage(
+  user: User,
+  file: File,
+  cropType: CropType,
+  cropTypeSource: CropTypeSource,
+): Promise<CropAnalysis> {
+  const formData = new FormData();
+  formData.append('image', file, file.name);
+  formData.append('cropType', cropType);
+  formData.append('cropTypeSource', cropTypeSource);
+  const response = await authenticatedRequest<{ analysis: CropAnalysis }>(
+    '/api/crop-analysis',
+    user,
+    { method: 'POST', body: formData },
+  );
+  return response.analysis;
+}
+
+export async function getCropAnalysis(user: User, analysisId: string): Promise<CropAnalysis> {
+  const response = await authenticatedRequest<{ analysis: CropAnalysis }>(
+    `/api/crop-analysis/${encodeURIComponent(analysisId)}`,
+    user,
+  );
+  return response.analysis;
+}
+
 export async function decidePilotRoleRequest(user: User, requestId: string, status: 'APPROVED' | 'REJECTED') {
   return authenticatedRequest<{ success: boolean; status: string }>(
     `/api/auth/admin/role-requests/${requestId}`,
@@ -151,7 +202,7 @@ async function authenticatedRequest<T>(
     response = await fetch(`${apiUrl}${path}`, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
         Authorization: `Bearer ${token}`,
         ...options.headers,
       },

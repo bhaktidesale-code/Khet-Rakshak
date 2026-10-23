@@ -9,6 +9,7 @@ const { getDatabaseReadiness } = require("./services/readiness");
 const { getSafeDatabaseErrorDetails } = require("./services/databaseDiagnostics");
 const authRoutes = require("./routes/authRoutes");
 const roleRoutes = require("./routes/roleRoutes");
+const { createCropAnalysisRouter } = require("./routes/cropAnalysisRoutes");
 
 const app = express();
 const port = Number(process.env.PORT || 5000);
@@ -54,6 +55,7 @@ app.use("/api/", rateLimit({
 }));
 
 app.use("/api/auth", authRoutes);
+app.use("/api", createCropAnalysisRouter());
 app.use("/api", roleRoutes);
 
 app.get("/", (_req, res) => {

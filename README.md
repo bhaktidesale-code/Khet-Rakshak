@@ -63,6 +63,14 @@ npm run provision-admin -- <verified-firebase-uid> --confirm
 
 The command checks for a verified email or phone claim before assigning `ADMIN`. Protect database and Firebase Admin credentials as privileged infrastructure credentials.
 
+## Crop image demo and analysis status
+
+The landing page and public **Try Crop Health Demo** page use the 21 bundled dataset images. Crop names derived from `Cotton_` or `Turmeric_` filenames are unverified hints; `C.jpeg` and `Tur.jpeg` remain unclassified. Farmers can also submit a JPEG, PNG, or WebP image (up to 8 MB and 16 megapixels) to the authenticated API for a temporary readability check. The API holds uploads in memory only and does not save images or farm records.
+
+No trained crop-disease model, class labels, or validated inference service is present. The result therefore reports image readability and explicitly marks disease analysis unavailable; it does not produce disease labels, confidence, severity, or treatment advice. Temporary results are scoped to their farmer and API process and expire after 15 minutes. They are not persistent farm reports.
+
+The existing PostgreSQL schema has no farms or crop-analysis history. Persistent reporting is deliberately deferred; a reviewed migration would first add minimal farmer-owned farm records and analysis-run metadata (`owner_user_id`, `farm_id`, submitted crop/source, filename, status, nullable model/result fields, and timestamp) with a composite ownership constraint. It should not store images or permanent image URLs without a separate retention policy. Do not apply a schema change until that migration and the production database target have been reviewed.
+
 ## Production deployment
 
 The repository contains two separate deployables: the static Vite app in `Frontend/` and the Express/PostgreSQL API in `Backend/`. The Vercel frontend project does not imply that the API is deployed. A production sign-in uses Firebase in the browser to obtain a Firebase ID token, sends it as `Authorization: Bearer <token>` to the API, and relies on Firebase Admin plus PostgreSQL for identity verification and application roles.

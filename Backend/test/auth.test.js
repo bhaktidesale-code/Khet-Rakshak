@@ -170,6 +170,8 @@ test("protected API routes reject guests even when a role is submitted in the bo
   const baseUrl = `http://127.0.0.1:${address.port}`;
 
   const requests = [
+    { path: "/api/crop-analysis", method: "POST" },
+    { path: "/api/crop-analysis/0eaf3276-54f7-4730-97d5-4f457fe56a4d", method: "GET" },
     { path: "/api/farmer/profile", method: "GET" },
     { path: "/api/operator/assignments", method: "GET" },
     { path: "/api/admin/health", method: "GET" },

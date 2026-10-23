@@ -47,6 +47,14 @@ The local default port is 5000. The service listens on `0.0.0.0` and uses the pl
 - Protected routes use `Authorization: Bearer <Firebase ID token>`. Firebase Admin verifies signature, project audience, expiry, and revocation. Application roles come from `app_users`, not request input.
 - `FRONTEND_URL` is the exact allowed browser origin. Development additionally allows local Vite origins; production does not allow wildcard origins.
 
+## Crop image workflow
+
+- `GET /api/crop-images` lists the 21 public demo samples by filename and relative frontend asset path. Crop names are filename hints only; the API does not assign verified crop or disease labels.
+- `POST /api/crop-analysis` accepts a multipart `image`, `cropType` (`cotton`, `turmeric`, `other`, or `unknown`), and `cropTypeSource`. It requires an active `FARMER` Firebase identity, accepts JPEG/PNG/WebP up to 8 MB and 16 megapixels, and is limited to 10 requests per IP per 15 minutes. Sharp validates and decodes the image for a readability/dimension check. It does not identify blur, crop species, disease, or severity.
+- `GET /api/crop-analysis/:analysisId` retrieves the result for its owning farmer only. Results are kept in bounded process memory for at most 15 minutes; they are lost on restart and are not shared between API instances. The uploaded image is never written to disk or persisted in PostgreSQL.
+- No validated cotton/turmeric disease model is included or configured. The current result is explicitly `image_quality_only` with `model_unavailable` (or `unsupported_crop` for “Other”), null prediction, and null confidence. This must not be presented as a disease diagnosis.
+- No analysis history or farm schema exists. Persistent reports are intentionally not implemented and no database migration is required for this temporary workflow. Before saving farm reports, review a migration that adds a minimal `farms` table (`id`, `owner_user_id`, and required farm identity fields) and a `crop_analysis_runs` table (`id`, `owner_user_id`, `farm_id`, submitted crop/source, original filename, analysis status, nullable result/model metadata, and `created_at`). Enforce farm ownership with a composite foreign key from `(farm_id, owner_user_id)` to the farm owner key. Do not include an image URL or blob unless a separate authorized image-retention policy is approved. The current frontend farm records are session-only, so a report cannot yet be associated with a durable farm.
+
 ## Deploy on Render
 
 Use this directory as the Render Web Service **Root Directory**, `npm ci` as **Build Command**, and `npm start` as **Start Command**. Configure these exact backend variables in Render's Environment settings:
