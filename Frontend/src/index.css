@@ -85,3 +85,39 @@ html.dark .text-amber-400, html.dark .text-amber-500 { color: #f5c16d !important
     transition-duration: .01ms !important;
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  #app-navigation,
+  #farm-health-report,
+  #farm-health-report * {
+    visibility: visible !important;
+  }
+
+  #app-navigation {
+    display: none !important;
+  }
+
+  #farm-health-report {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #17251c !important;
+  }
+
+  #farm-health-report .farm-report-actions {
+    display: none !important;
+  }
+
+  #farm-health-report,
+  #farm-health-report * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

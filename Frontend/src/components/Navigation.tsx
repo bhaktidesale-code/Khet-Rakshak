@@ -119,7 +119,7 @@ export default function Navigation({
   };
 
   return (
-    <div className={`relative ${isLargeText ? 'text-lg' : 'text-sm'}`}>
+    <div id="app-navigation" className={`relative ${isLargeText ? 'text-lg' : 'text-sm'}`}>
       {/* Main Top Header */}
       <header className={`sticky top-0 z-40 border-b transition-all duration-200 ${
         currentTheme === 'dark' 

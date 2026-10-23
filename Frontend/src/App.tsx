@@ -21,6 +21,7 @@ import { translations } from './translations';
 import Navigation from './components/Navigation';
 import LandingPage from './components/LandingPage';
 import CropHealthWorkflow from './components/CropHealthWorkflow';
+import FarmMonitoringDashboard from './components/FarmMonitoringDashboard';
 import AuthPage from './components/AuthPage';
 import ProfileSetup from './components/ProfileSetup';
 import FarmSetup, { EmptyFarmState } from './components/FarmSetup';
@@ -64,7 +65,7 @@ function hasCompleteProfile(user: AppUser) {
 }
 
 function isViewAllowed(view: string, role: AppRole) {
-  if (view === 'home' || view === 'login' || view === 'profile-setup' || view === 'crop-demo') return true;
+  if (view === 'home' || view === 'login' || view === 'profile-setup' || view === 'crop-demo' || view === 'farm-health-demo') return true;
   if (role === 'FARMER') {
     return [
       'dashboard', 'farms', 'register', 'booking-flow', 'bookings-list',
@@ -344,7 +345,7 @@ export default function App() {
       setCurrentView(view);
       return;
     }
-    if (view === 'crop-demo') {
+    if (view === 'crop-demo' || view === 'farm-health-demo') {
       setCurrentView(view);
       return;
     }
@@ -484,6 +485,13 @@ export default function App() {
               onRequestAccess={handleCropAnalysisAccessRequest}
             />
           </section>
+        )}
+
+        {!authLoading && currentView === 'farm-health-demo' && (
+          <FarmMonitoringDashboard
+            onBack={() => handleNavigate('home')}
+            onOpenImageCheck={() => handleNavigate('crop-demo')}
+          />
         )}
 
         {!authLoading && currentView === 'login' && (

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ClipboardCheck, Leaf, MapPinned, Sprout } from 'lucide-react';
 import { Language } from '../types';
 import { translations } from '../translations';
-import CropImageGallery from './CropImageGallery';
+import FarmDemoPreview from './FarmDemoPreview';
 
 interface LandingPageProps {
   currentLanguage: Language;
@@ -77,7 +77,7 @@ export default function LandingPage({ currentLanguage, onNavigate }: LandingPage
               <ActiveDemoIcon aria-hidden="true" className="h-4 w-4" />
               {demoSteps[demoStep].title}
             </div>
-            <CropImageGallery />
+            <FarmDemoPreview onViewHealth={() => onNavigate('farm-health-demo')} />
           </div>
         </div>
       </section>

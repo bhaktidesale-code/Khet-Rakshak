@@ -36,6 +36,7 @@ Some screens are working interface prototypes, while other actions need connecte
 - Drone booking currently shows an unavailable message and does not create a booking.
 - Sensor, advisory, analysis, consultation, and expense screens provide interface content, but should not be treated as connected live farm data or completed service workflows.
 - Pilot assignments, profile updates, and administrator actions require the API. Manager tools are currently a placeholder.
+- The landing-page farm preview and `farm-health-demo` screen are public demonstrations for Shindkheda Cotton Farm. They use the existing bundled `Cotton_4.jpeg` sample; its stored capitalization is preserved. The dashboard has no connected farm, sensor, weather, or history API. Its trend charts are explicitly illustrative demo data, and the report is printable sample content rather than a saved farm record.
 
 ## Run the UI locally
 
