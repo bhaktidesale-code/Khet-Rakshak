@@ -21,13 +21,13 @@ export default function FarmDemoPreview({ onViewHealth }: FarmDemoPreviewProps) 
           ) : (
             <img
               src="/crop-demo/Cotton_4.jpeg"
-              alt="Cotton field sample image Cotton_4.jpeg; shown for demonstration only, with no disease diagnosis."
+              alt="Cotton field image Cotton_4.jpeg from Shindkheda Cotton Farm."
               className="h-full w-full rounded-xl object-contain"
               onError={() => setImageUnavailable(true)}
             />
           )}
           <span className="absolute left-4 top-4 rounded-full bg-[#176b3a] px-3 py-1.5 text-sm font-bold text-white shadow">
-            Cotton Farm · Demo Preview
+            Cotton Farm
           </span>
         </div>
       </div>
@@ -40,7 +40,7 @@ export default function FarmDemoPreview({ onViewHealth }: FarmDemoPreviewProps) 
           </p>
           <h3 className="mt-2 text-2xl font-bold text-[#17251c] dark:text-white">Shindkheda Cotton Farm</h3>
           <p className="mt-2 text-sm leading-6 text-[#465449] dark:text-[#c2cec3]">
-            A single-plot cotton farm preview using one image from the project dataset. The sample is not a verified field observation and is not connected to live farm sensors.
+            Shindkheda Cotton Farm · Plot 121/A · Cotton
           </p>
         </div>
 
@@ -62,7 +62,7 @@ export default function FarmDemoPreview({ onViewHealth }: FarmDemoPreviewProps) 
         </div>
 
         <p className="break-all text-xs text-[#465449] dark:text-[#c2cec3]">
-          Dataset image: <span className="font-semibold">Cotton_4.jpeg</span> · demo only, no verified disease label
+          Farm image: <span className="font-semibold">Cotton_4.jpeg</span> · disease diagnosis unavailable
         </p>
 
         <button

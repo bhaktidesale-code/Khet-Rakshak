@@ -43,6 +43,7 @@ html.large-text { font-size: 112.5%; }
 body {
   margin: 0;
   min-width: 320px;
+  position: relative;
   background: var(--page);
   color: var(--text);
   font-family: var(--font-sans);
@@ -50,6 +51,36 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23176b3a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 10 7 7m3 7-3 3m7-7 3-3m-3 7 3 3'/%3E%3Cpath d='M14.205 4.139a4 4 0 1 1 5.439 5.863M19.637 14a4 4 0 1 1-5.432 5.868M4.367 10a4 4 0 1 1 5.438-5.862M9.795 19.862a4 4 0 1 1-5.429-5.873'/%3E%3Crect x='10' y='8' width='4' height='8' rx='1'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23176b3a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='7' y='9' width='10' height='12' rx='2'/%3E%3Cpath d='M10 13h4m-4 4h4M4 5a11 11 0 0 1 16 0M7 8a7 7 0 0 1 10 0'/%3E%3C/svg%3E"),
+    url("/crop-demo/Cotton_4.jpeg"),
+    url("/crop-demo/Turmeric_9.jpeg");
+  background-repeat: no-repeat;
+  background-position:
+    left 7% top 27%,
+    right 7% bottom 25%,
+    right 2% top 13%,
+    left 1% bottom 8%;
+  background-size:
+    76px 76px,
+    76px 76px,
+    clamp(220px, 25vw, 360px) auto,
+    clamp(220px, 25vw, 360px) auto;
+  opacity: 0.09;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
 }
 
 button, input, select, textarea { font: inherit; }
@@ -74,7 +105,7 @@ html.dark .text-emerald-300, html.dark .text-emerald-400 { color: #a5e8b5 !impor
 .text-amber-400, .text-amber-500 { color: #854d0e !important; }
 html.dark .text-amber-400, html.dark .text-amber-500 { color: #f5c16d !important; }
 .border-gray-100, .border-gray-200, .border-gray-300, .border-stone-200, .border-stone-300, .border-gray-700, .border-gray-800 { border-color: var(--border) !important; }
-.min-h-screen { background-color: var(--page); color: var(--text); }
+.min-h-screen { position: relative; z-index: 1; background-color: transparent; color: var(--text); }
 @media (max-width: 420px) { body { font-size: 17px; } }
 
 @media (prefers-reduced-motion: reduce) {

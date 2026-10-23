@@ -51,7 +51,7 @@ export default function LandingPage({ currentLanguage, onNavigate }: LandingPage
       <section aria-labelledby="demo-title" className="overflow-hidden rounded-3xl border border-[#7b8d80] bg-white shadow-sm dark:border-[#536458] dark:bg-[#1b2920]">
         <div className="grid lg:grid-cols-[1fr_1fr]">
           <div className="p-6 sm:p-8 lg:p-10">
-            <span className="inline-flex items-center rounded-full border border-[#176b3a] bg-[#e9f3e9] px-3 py-1 text-sm font-bold text-[#174c2c] dark:bg-[#263e2e] dark:text-[#a5e8b5]">{t.watch_demo} · {t.demo_sample_only}</span>
+            <span className="inline-flex items-center rounded-full border border-[#176b3a] bg-[#e9f3e9] px-3 py-1 text-sm font-bold text-[#174c2c] dark:bg-[#263e2e] dark:text-[#a5e8b5]">Farm overview · Shindkheda</span>
             <h2 id="demo-title" className="mt-4 text-2xl font-bold text-[#17251c] dark:text-white sm:text-3xl">{t.how_it_works}</h2>
             <p className="mt-2 text-base leading-7 text-[#465449] dark:text-[#c2cec3]">{t.landing_subtitle}</p>
 

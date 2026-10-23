@@ -130,9 +130,7 @@ export default function Navigation({
           
           {/* Logo Section */}
           <button type="button" aria-label="Khet Rakshak home" className="flex min-h-12 items-center gap-3 rounded-lg text-left" onClick={() => onViewChange('home')} id="logo-container">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-600/30">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
+            <img src="/Logo.jpeg" alt="" className="h-12 w-12 shrink-0 rounded-xl object-cover shadow-sm" />
             <div>
               <h1 className="font-display font-bold text-xl tracking-tight text-emerald-600 flex items-center gap-1.5 dark:text-emerald-400">
                 {t.app_title}

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Activity,
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
@@ -20,68 +19,6 @@ interface FarmMonitoringDashboardProps {
 
 type ImageStatus = 'loading' | 'loaded' | 'error';
 
-const illustrativeHealthValues = [42, 48, 45, 56];
-const illustrativeMoistureValues = [24, 29, 27, 33];
-const illustrativeSteps = ['Example 1', 'Example 2', 'Example 3', 'Example 4'];
-
-function DemoTrendChart({
-  title,
-  description,
-  values,
-  color,
-}: {
-  title: string;
-  description: string;
-  values: number[];
-  color: string;
-}) {
-  const points = values
-    .map((value, index) => `${32 + index * 112},${142 - value * 1.15}`)
-    .join(' ');
-
-  return (
-    <article className="rounded-2xl border border-[#7b8d80] bg-white p-5 dark:border-[#536458] dark:bg-[#1b2920]">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-bold text-[#17251c] dark:text-white">{title}</h3>
-          <p className="mt-1 text-sm text-[#465449] dark:text-[#c2cec3]">{description}</p>
-        </div>
-        <span className="rounded-full bg-[#fff0df] px-3 py-1 text-xs font-bold text-[#85420d] dark:bg-[#422b18] dark:text-[#ffd09d]">
-          Demo data
-        </span>
-      </div>
-      <p className="mt-4 text-xs leading-5 text-[#465449] dark:text-[#c2cec3]">
-        Illustrative only—not measurements or history from this farm.
-      </p>
-      <div className="mt-3 overflow-hidden rounded-xl bg-[#f7f9f5] p-2 dark:bg-[#111a14]">
-        <svg
-          viewBox="0 0 400 190"
-          role="img"
-          aria-label={`${title}: illustrative demo data only, not real farm measurements.`}
-          className="h-48 w-full"
-          preserveAspectRatio="none"
-        >
-          {[32, 64, 96, 128, 160].map((y) => (
-            <line key={y} x1="24" x2="390" y1={y} y2={y} stroke="currentColor" className="text-[#dce5dc] dark:text-[#334239]" strokeDasharray="3 5" />
-          ))}
-          <polyline points={points} fill="none" stroke={color} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-          {values.map((value, index) => {
-            const x = 32 + index * 112;
-            const y = 142 - value * 1.15;
-            return (
-              <g key={`${value}-${index}`}>
-                <circle cx={x} cy={y} r="5" fill={color} />
-                <text x={x} y={y - 12} textAnchor="middle" className="fill-[#465449] text-[11px] dark:fill-[#c2cec3]">{value}%</text>
-                <text x={x} y="178" textAnchor="middle" className="fill-[#465449] text-[10px] dark:fill-[#c2cec3]">{illustrativeSteps[index]}</text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-    </article>
-  );
-}
-
 function FarmSampleImage({
   status,
   onLoad,
@@ -98,19 +35,19 @@ function FarmSampleImage({
       {status === 'error' ? (
         <div role="alert" className="flex max-w-sm flex-col items-center gap-2 p-5 text-center text-[#465449] dark:text-[#c2cec3]">
           <ShieldAlert aria-hidden="true" className="h-9 w-9 text-[#9a4b12]" />
-          <p className="font-semibold">The sample image is unavailable.</p>
+          <p className="font-semibold">The farm image is unavailable.</p>
           <p className="text-sm">The dashboard can still show which farm data is not connected.</p>
         </div>
       ) : (
         <>
           {status === 'loading' && (
             <p role="status" className="absolute z-10 rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-[#465449] shadow dark:bg-[#111a14] dark:text-[#c2cec3]">
-              Loading sample image…
+              Loading farm image…
             </p>
           )}
           <img
             src="/crop-demo/Cotton_4.jpeg"
-            alt="Cotton_4.jpeg, an undated cotton farm demo sample. No diagnosis is available."
+            alt="Cotton field image Cotton_4.jpeg. Image date is unavailable; no diagnosis is available."
             className={`h-full w-full object-contain ${status === 'loading' ? 'opacity-0' : 'opacity-100'}`}
             onLoad={onLoad}
             onError={onError}
@@ -138,9 +75,9 @@ export default function FarmMonitoringDashboard({
           <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           Back
         </button>
-        <span className="inline-flex items-center gap-2 rounded-full border border-[#e9b77f] bg-[#fff7ed] px-3 py-1.5 text-sm font-bold text-[#85420d] dark:border-[#8d5a2a] dark:bg-[#422b18] dark:text-[#ffd09d]">
-          <Activity aria-hidden="true" className="h-4 w-4" />
-          Demo farm · no live monitoring
+        <span className="inline-flex items-center gap-2 rounded-full border border-[#7b8d80] bg-white px-3 py-1.5 text-sm font-bold text-[#174c2c] dark:border-[#536458] dark:bg-[#1b2920] dark:text-[#a5e8b5]">
+          <Leaf aria-hidden="true" className="h-4 w-4" />
+          Farm overview
         </span>
       </header>
 
@@ -152,8 +89,8 @@ export default function FarmMonitoringDashboard({
             onError={() => setImageStatus('error')}
           />
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-[#465449] dark:text-[#c2cec3]">
-            <span>Sample image · <strong className="text-[#17251c] dark:text-white">Cotton_4.jpeg</strong></span>
-            <span>Observation date: unavailable (undated sample)</span>
+            <span>Farm image · <strong className="text-[#17251c] dark:text-white">Cotton_4.jpeg</strong></span>
+            <span>Image date: unavailable</span>
           </div>
         </div>
         <div className="min-w-0 flex flex-col justify-center p-6 sm:p-8 lg:p-10">
@@ -169,13 +106,13 @@ export default function FarmMonitoringDashboard({
             Shindkheda, Plot No. 121/A, Dhule, Maharashtra, India
           </p>
           <div className="mt-6 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-100">
-            <p className="font-bold">Demo preview · not connected to live farm data</p>
-            <p className="mt-1">No farm sensors, saved observations, weather feed, or validated cotton diagnosis model are connected.</p>
+            <p className="font-bold">Illustrative example values — not measured on this farm</p>
+            <p className="mt-1">No live farm sensors, saved observations, weather feed, or validated cotton diagnosis model are connected. The example figures below are for demonstration only.</p>
           </div>
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl bg-[#f7f9f5] p-4 dark:bg-[#111a14]">
               <dt className="text-sm font-semibold text-[#465449] dark:text-[#c2cec3]">Monitoring status</dt>
-              <dd className="mt-1 font-bold text-[#17251c] dark:text-white">Demo sample only</dd>
+              <dd className="mt-1 font-bold text-[#17251c] dark:text-white">Image on file</dd>
             </div>
             <div className="rounded-xl bg-[#f7f9f5] p-4 dark:bg-[#111a14]">
               <dt className="text-sm font-semibold text-[#465449] dark:text-[#c2cec3]">Last updated</dt>
@@ -188,55 +125,39 @@ export default function FarmMonitoringDashboard({
       <section aria-labelledby="indicators-title">
         <div className="mb-4">
           <h2 id="indicators-title" className="text-2xl font-bold text-[#17251c] dark:text-white">Farm indicators</h2>
-          <p className="mt-1 text-sm text-[#465449] dark:text-[#c2cec3]">No live measurements are available for this demo plot.</p>
+          <p className="mt-1 text-sm text-[#465449] dark:text-[#c2cec3]">Illustrative estimates only. These figures are not sensor readings, model results, or verified farm observations.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <article className="rounded-2xl border border-[#7b8d80] bg-white p-5 dark:border-[#536458] dark:bg-[#1b2920]">
-            <div className="flex items-center gap-2 text-[#176b3a] dark:text-[#a5e8b5]"><ScanLine aria-hidden="true" className="h-5 w-5" /><h3 className="font-bold text-[#17251c] dark:text-white">Overall crop health</h3></div>
-            <p className="mt-4 text-xl font-bold text-[#17251c] dark:text-white">Not assessed</p>
-            <p className="mt-1 text-sm leading-5 text-[#465449] dark:text-[#c2cec3]">No validated model or field observations.</p>
+            <div className="flex items-center gap-2 text-[#176b3a] dark:text-[#a5e8b5]"><ScanLine aria-hidden="true" className="h-5 w-5" /><h3 className="font-bold text-[#17251c] dark:text-white">Example crop-health index</h3></div>
+            <p className="mt-4 text-xl font-bold text-[#17251c] dark:text-white">72 / 100 · illustrative</p>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#e9f3e9] dark:bg-[#111a14]" role="progressbar" aria-label="Illustrative crop-health index, not a real farm measurement" aria-valuemin={0} aria-valuemax={100} aria-valuenow={72}>
+              <div className="h-full rounded-full bg-[#6a9c54]" style={{ width: '72%' }} />
+            </div>
+            <p className="mt-2 text-sm leading-5 text-[#465449] dark:text-[#c2cec3]">Example only; not calculated from the image or a validated model.</p>
           </article>
           <article className="rounded-2xl border border-[#7b8d80] bg-white p-5 dark:border-[#536458] dark:bg-[#1b2920]">
-            <div className="flex items-center gap-2 text-[#176b3a] dark:text-[#a5e8b5]"><Droplets aria-hidden="true" className="h-5 w-5" /><h3 className="font-bold text-[#17251c] dark:text-white">Soil moisture</h3></div>
-            <p className="mt-4 text-xl font-bold text-[#17251c] dark:text-white">Soil moisture data unavailable</p>
-            <p className="mt-1 text-sm leading-5 text-[#465449] dark:text-[#c2cec3]">No sensor reading is connected.</p>
+            <div className="flex items-center gap-2 text-[#176b3a] dark:text-[#a5e8b5]"><Droplets aria-hidden="true" className="h-5 w-5" /><h3 className="font-bold text-[#17251c] dark:text-white">Example soil moisture</h3></div>
+            <p className="mt-4 text-xl font-bold text-[#17251c] dark:text-white">28% · illustrative</p>
+            <p className="mt-1 text-sm leading-5 text-[#465449] dark:text-[#c2cec3]">No sensor is connected; actual soil moisture is unavailable.</p>
           </article>
           <article className="rounded-2xl border border-[#e9b77f] bg-[#fffaf4] p-5 dark:border-[#8d5a2a] dark:bg-[#2b2118]">
-            <div className="flex items-center gap-2 text-[#9a4b12]"><CircleHelp aria-hidden="true" className="h-5 w-5" /><h3 className="font-bold text-[#17251c] dark:text-white">Irrigation</h3></div>
-            <p className="mt-4 font-bold text-[#17251c] dark:text-white">Demo recommendation</p>
-            <p className="mt-1 text-sm leading-5 text-[#465449] dark:text-[#c2cec3]">Demo recommendation — not based on live sensor data. Check soil moisture before deciding whether to water.</p>
+            <div className="flex items-center gap-2 text-[#9a4b12]"><CircleHelp aria-hidden="true" className="h-5 w-5" /><h3 className="font-bold text-[#17251c] dark:text-white">Example irrigation guidance</h3></div>
+            <p className="mt-4 font-bold text-[#17251c] dark:text-white">Consider 4–5 mm · illustrative</p>
+            <p className="mt-1 text-sm leading-5 text-[#465449] dark:text-[#c2cec3]">Not based on soil, weather, or sensor data. Check field conditions before irrigating.</p>
           </article>
           <article className="rounded-2xl border border-[#7b8d80] bg-white p-5 dark:border-[#536458] dark:bg-[#1b2920]">
-            <div className="flex items-center gap-2 text-[#176b3a] dark:text-[#a5e8b5]"><Leaf aria-hidden="true" className="h-5 w-5" /><h3 className="font-bold text-[#17251c] dark:text-white">Growth status</h3></div>
-            <p className="mt-4 text-xl font-bold text-[#17251c] dark:text-white">Not assessed</p>
-            <p className="mt-1 text-sm leading-5 text-[#465449] dark:text-[#c2cec3]">No crop stage observations are recorded.</p>
+            <div className="flex items-center gap-2 text-[#176b3a] dark:text-[#a5e8b5]"><Leaf aria-hidden="true" className="h-5 w-5" /><h3 className="font-bold text-[#17251c] dark:text-white">Example growth stage</h3></div>
+            <p className="mt-4 text-xl font-bold text-[#17251c] dark:text-white">Flowering · illustrative</p>
+            <p className="mt-1 text-sm leading-5 text-[#465449] dark:text-[#c2cec3]">Example cotton scenario; no field-stage observation is recorded.</p>
           </article>
         </div>
       </section>
 
-      <section aria-labelledby="trends-title" className="space-y-4">
-        <div>
-          <h2 id="trends-title" className="text-2xl font-bold text-[#17251c] dark:text-white">Illustrative trend examples</h2>
-          <p className="mt-1 text-sm leading-6 text-[#465449] dark:text-[#c2cec3]">
-            Demo data only. These examples are not measurements, dates, or history from Shindkheda Cotton Farm.
-          </p>
-        </div>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <DemoTrendChart
-            title="Crop health trend"
-            description="Illustrative index (%) · not an AI result"
-            values={illustrativeHealthValues}
-            color="#176b3a"
-          />
-          <DemoTrendChart
-            title="Soil moisture trend"
-            description="Illustrative example (%) · no sensor connected"
-            values={illustrativeMoistureValues}
-            color="#d97706"
-          />
-        </div>
-        <p className="rounded-xl border border-[#7b8d80] bg-white p-4 text-sm leading-6 text-[#465449] dark:border-[#536458] dark:bg-[#1b2920] dark:text-[#c2cec3]">
-          No weather or rainfall chart is shown because no weather source is connected. The chart lines above are fixed illustrative examples, not collected farm data.
+      <section aria-labelledby="trends-title" className="rounded-2xl border border-[#7b8d80] bg-white p-5 dark:border-[#536458] dark:bg-[#1b2920] sm:p-6">
+        <h2 id="trends-title" className="text-2xl font-bold text-[#17251c] dark:text-white">Farm trends</h2>
+        <p className="mt-2 text-sm leading-6 text-[#465449] dark:text-[#c2cec3]">
+          Historical crop-health, soil-moisture, and weather trends are unavailable because no dated measurements have been recorded for this farm.
         </p>
       </section>
 
@@ -247,7 +168,7 @@ export default function FarmMonitoringDashboard({
           <div>
             <p className="font-semibold text-[#17251c] dark:text-white">No verified observations recorded</p>
             <p className="mt-1 text-sm leading-6 text-[#465449] dark:text-[#c2cec3]">
-              The sample image is undated. No sensor readings, field notes, weather observations, or saved analysis reports are available for this farm.
+              The image date is unavailable. No sensor readings, field notes, weather observations, or saved analysis reports are available for this farm.
             </p>
           </div>
         </div>
@@ -256,7 +177,7 @@ export default function FarmMonitoringDashboard({
       <section id="farm-health-report" aria-labelledby="report-title" className="space-y-5 rounded-3xl border border-[#7b8d80] bg-white p-5 shadow-sm dark:border-[#536458] dark:bg-[#1b2920] sm:p-7">
         <div className="farm-report-actions flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-bold uppercase tracking-wide text-[#176b3a] dark:text-[#a5e8b5]">Sample report</p>
+            <p className="text-sm font-bold uppercase tracking-wide text-[#176b3a] dark:text-[#a5e8b5]">Farm report</p>
             <h2 id="report-title" className="mt-1 text-2xl font-bold text-[#17251c] dark:text-white">Crop monitoring summary</h2>
           </div>
           <button
@@ -280,17 +201,18 @@ export default function FarmMonitoringDashboard({
             <div>
               <h3 className="font-bold text-[#17251c] dark:text-white">Image and observation date</h3>
               <p className="mt-1 text-sm leading-6 text-[#465449] dark:text-[#c2cec3]">
-                Cotton_4.jpeg · sample image · observation date unavailable (undated)
+                Cotton_4.jpeg · image date unavailable
               </p>
             </div>
             <div>
               <h3 className="font-bold text-[#17251c] dark:text-white">Available indicators</h3>
               <ul className="mt-1 list-inside list-disc text-sm leading-6 text-[#465449] dark:text-[#c2cec3]">
-                <li>Crop health: not assessed; no validated model output.</li>
-                <li>Soil moisture: unavailable; no sensor reading.</li>
-                <li>Growth stage: not assessed; no field observation.</li>
-                <li>Irrigation: illustrative guidance only, not sensor-based.</li>
+                <li>Example health index: 72/100, illustrative only; not a model result.</li>
+                <li>Example soil moisture: 28%, illustrative only; actual reading unavailable.</li>
+                <li>Example growth stage: flowering; no field observation confirms this stage.</li>
+                <li>Example irrigation: consider 4–5 mm; not based on soil or weather data.</li>
               </ul>
+              <p className="mt-2 text-xs leading-5 text-[#9a4b12] dark:text-[#e8b777]">All numeric values in this report are illustrative examples, not measured on this farm.</p>
             </div>
             <div>
               <h3 className="font-bold text-[#17251c] dark:text-white">Suggested next steps</h3>
@@ -300,26 +222,26 @@ export default function FarmMonitoringDashboard({
                 <li>Request an expert review for a crop diagnosis; the image check only verifies readability.</li>
               </ul>
               <p className="mt-2 text-xs leading-5 text-[#465449] dark:text-[#c2cec3]">
-                General suggestions only—not based on a verified finding from this demo farm.
+                General suggestions only—not based on a verified health finding for this farm.
               </p>
             </div>
           </div>
           <div className="space-y-3">
             <FarmSampleImage status={imageStatus} compact />
             <p className="text-xs leading-5 text-[#465449] dark:text-[#c2cec3]">
-              {imageStatus === 'error' ? 'The primary sample image could not be displayed.' : 'Primary sample image · Cotton_4.jpeg · no diagnosis'}
+              {imageStatus === 'error' ? 'The primary farm image could not be displayed.' : 'Primary farm image · Cotton_4.jpeg · no diagnosis'}
             </p>
           </div>
         </div>
         <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm leading-6 text-amber-950 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-100">
           <AlertTriangle aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
           <p>
-            <strong>Missing data:</strong> no validated crop-disease model, saved farm records, live sensors, weather feed, or dated field observations are connected. This sample report is not a live crop assessment.
+            <strong>Missing data:</strong> no validated crop-disease model, saved monitoring history, live sensors, weather feed, or dated field observations are available. No crop diagnosis or sensor measurement is included in this report.
           </p>
         </div>
         <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#465449] dark:text-[#c2cec3]">
           <CheckCircle2 aria-hidden="true" className="h-4 w-4 text-[#176b3a]" />
-          Report content is clearly marked as sample data or unavailable; no diagnosis or live reading is claimed.
+          Report includes the farm details and image provided; health readings remain unavailable until real observations or sensors are connected.
         </p>
       </section>
 
