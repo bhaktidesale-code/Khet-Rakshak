@@ -10,7 +10,6 @@ const {
   getMigrationStatus,
   REQUIRED_COLUMNS,
   REQUIRED_CONSTRAINTS,
-  REQUIRED_INDEXES,
   validateDatabaseUrl,
 } = require("../services/migrations");
 const { getDatabaseReadiness } = require("../services/readiness");
@@ -71,7 +70,7 @@ test("authentication repair migration is additive and follows the original schem
   const migrations = discoverMigrations();
   assert.deepEqual(
     migrations.map((migration) => migration.filename),
-    ["001_authentication.sql", "002_ensure_auth_tables.sql", "003_drone_image_workflow.sql"]
+    ["001_authentication.sql", "002_ensure_auth_tables.sql"]
   );
   const repairSql = fs.readFileSync(migrations[1].path, "utf8");
   assert.match(repairSql, /CREATE TABLE IF NOT EXISTS public\.app_users/);
@@ -79,12 +78,6 @@ test("authentication repair migration is additive and follows the original schem
   assert.match(repairSql, /exists outside public; refusing to create a second table/);
   assert.doesNotMatch(repairSql, /^\s*(DROP\s+TABLE|TRUNCATE|DELETE\s+FROM|INSERT\s+INTO|UPDATE)\b/im);
   assert.match(repairSql, /CREATE UNIQUE INDEX IF NOT EXISTS app_users_mobile_unique/);
-  const droneSql = fs.readFileSync(migrations[2].path, "utf8");
-  assert.match(droneSql, /CREATE TABLE IF NOT EXISTS public\.drone_images/);
-  assert.match(droneSql, /FOREIGN KEY \(farmer_user_id, farm_id\)/);
-  assert.match(droneSql, /FOREIGN KEY \(batch_id, farmer_user_id, farm_id, operator_user_id\)/);
-  assert.match(droneSql, /captured_at TIMESTAMP WITHOUT TIME ZONE/);
-  assert.doesNotMatch(droneSql, /^\s*(DROP\s+TABLE|TRUNCATE|DELETE\s+FROM)\b/im);
 });
 
 test("migration status reports all migrations pending when history does not exist", async (t) => {
@@ -101,10 +94,7 @@ test("an already-applied original migration leaves the additive repair migration
   pool.state.rows.push({ version: "001", name: "authentication" });
   const status = await getMigrationStatus(pool);
   assert.deepEqual(status.applied.map((migration) => migration.filename), ["001_authentication.sql"]);
-  assert.deepEqual(status.pending.map((migration) => migration.filename), [
-    "002_ensure_auth_tables.sql",
-    "003_drone_image_workflow.sql",
-  ]);
+  assert.deepEqual(status.pending.map((migration) => migration.filename), ["002_ensure_auth_tables.sql"]);
 });
 
 test("migrations are recorded transactionally and repeat runs are no-ops", async (t) => {
@@ -145,17 +135,11 @@ test("schema readiness requires all application columns, constraints, and indexe
     table_name, constraint_name, constraint_type: kind,
     constraint_definition: fragments.join(" "),
   }));
-  const validIndexes = REQUIRED_INDEXES.map(([tablename, indexname, fragments]) => ({
-    tablename,
-    indexname,
-    indexdef: `CREATE ${fragments.join(" ")} INDEX ${indexname}`,
-  }));
   const validSchema = {
     async query(sql) {
       if (sql.includes("information_schema.columns")) return { rows: validColumns };
       if (sql.includes("FROM pg_constraint")) return { rows: validConstraints };
-      if (sql.includes("FROM pg_indexes")) return { rows: validIndexes };
-      return { rows: [] };
+      return { rows: [{ mobile_index_ready: true }] };
     },
   };
   assert.equal(await checkApplicationSchema(validSchema), true);
@@ -163,14 +147,13 @@ test("schema readiness requires all application columns, constraints, and indexe
   const missingIndex = { ...validSchema, async query(sql) {
     if (sql.includes("information_schema.columns")) return { rows: validColumns };
     if (sql.includes("FROM pg_constraint")) return { rows: validConstraints };
-    if (sql.includes("FROM pg_indexes")) return { rows: validIndexes.slice(1) };
-    return { rows: [] };
+    return { rows: [{ mobile_index_ready: false }] };
   } };
   assert.equal(await checkApplicationSchema(missingIndex), false);
 });
 
 test("schema preflight validates existing tables while allowing an absent table to be created", async () => {
-  const columns = REQUIRED_COLUMNS.filter(([table, column]) => table === "app_users" && column !== "farmer_id").map(
+  const columns = REQUIRED_COLUMNS.filter(([table]) => table === "app_users").map(
     ([table_name, column_name, data_type, nullable, hasDefault, character_maximum_length]) => ({
       table_name,
       column_name,
@@ -191,10 +174,9 @@ test("schema preflight validates existing tables while allowing an absent table 
   const existingAppUsers = { async query(sql) {
     if (sql.includes("information_schema.columns")) return { rows: columns };
     if (sql.includes("FROM pg_constraint")) return { rows: constraints };
-    if (sql.includes("FROM pg_indexes")) return { rows: REQUIRED_INDEXES.filter(([, name]) => name === "app_users_mobile_unique").map(([tablename, indexname, fragments]) => ({ tablename, indexname, indexdef: `CREATE ${fragments.join(" ")} INDEX ${indexname}` })) };
-    return { rows: [] };
+    return { rows: [{ mobile_index_ready: true }] };
   } };
-  assert.equal(await checkApplicationSchema(existingAppUsers, { skipTables: ["role_requests"], skipDroneWorkflow: true }), true);
+  assert.equal(await checkApplicationSchema(existingAppUsers, { skipTables: ["role_requests"] }), true);
 });
 
 test("readiness distinguishes unconfigured, unreachable, unmigrated, and ready databases", async () => {
@@ -225,23 +207,16 @@ test("readiness distinguishes unconfigured, unreachable, unmigrated, and ready d
     table_name, constraint_name, constraint_type: kind,
     constraint_definition: fragments.join(" "),
   }));
-  const indexes = REQUIRED_INDEXES.map(([tablename, indexname, fragments]) => ({
-    tablename,
-    indexname,
-    indexdef: `CREATE ${fragments.join(" ")} INDEX ${indexname}`,
-  }));
   const readyDatabase = { async query(sql) {
     if (sql === "SELECT 1") return { rows: [{ "?column?": 1 }] };
     if (sql.includes("to_regclass")) return { rows: [{ history_table: "app_schema_migrations" }] };
     if (sql.includes("SELECT version, name, applied_at")) return { rows: [
       { version: "001", name: "authentication" },
       { version: "002", name: "ensure_auth_tables" },
-      { version: "003", name: "drone_image_workflow" },
     ] };
     if (sql.includes("information_schema.columns")) return { rows: columns };
     if (sql.includes("FROM pg_constraint")) return { rows: constraints };
-    if (sql.includes("FROM pg_indexes")) return { rows: indexes };
-    return { rows: [] };
+    return { rows: [{ mobile_index_ready: true }] };
   } };
   const ready = await getDatabaseReadiness(readyDatabase, { databaseUrl: "postgres://user:password@host/db" });
   assert.deepEqual(ready, {

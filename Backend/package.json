@@ -19,7 +19,6 @@
   "dependencies": {
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "exif-parser": "^0.1.12",
     "express": "^5.2.1",
     "express-rate-limit": "^7.5.1",
     "firebase-admin": "^13.5.0",

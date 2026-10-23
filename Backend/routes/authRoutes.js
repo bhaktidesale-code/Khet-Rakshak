@@ -26,7 +26,7 @@ router.patch("/profile", authenticate, async (req, res, next) => {
     const result = await pool.query(
       `UPDATE public.app_users SET full_name = $1, village = $2, updated_at = NOW()
        WHERE id = $3
-       RETURNING id, firebase_uid, farmer_id, email, full_name, mobile_number, village,
+       RETURNING id, firebase_uid, email, full_name, mobile_number, village,
                  role, account_status`,
       [fullName.trim(), village.trim(), req.user.id]
     );
@@ -71,7 +71,7 @@ router.post("/logout", authenticate, async (req, res, next) => {
 router.get("/admin/users", authenticate, requireRole("ADMIN"), async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT id::text AS id, farmer_id, email, full_name, mobile_number, village, role, account_status, created_at
+      `SELECT id::text AS id, email, full_name, mobile_number, village, role, account_status, created_at
        FROM public.app_users ORDER BY created_at DESC LIMIT 200`
     );
     return res.json({ users: result.rows });
@@ -195,7 +195,6 @@ router.patch(
 function toPublicUser(user) {
   return {
     id: String(user.id),
-    farmerId: user.farmer_id || null,
     email: user.email,
     fullName: user.full_name,
     mobileNumber: user.mobile_number,

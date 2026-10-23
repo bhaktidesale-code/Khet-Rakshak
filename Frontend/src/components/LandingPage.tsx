@@ -24,10 +24,7 @@ export default function LandingPage({ currentLanguage, onNavigate }: LandingPage
     <div className="mx-auto max-w-6xl space-y-8 px-1 py-4 sm:py-10">
       <section className="grid items-center gap-8 rounded-3xl border border-[#7b8d80] bg-white p-6 dark:border-[#536458] dark:bg-[#1b2920] sm:p-10 lg:grid-cols-[1.2fr_.8fr]">
         <div>
-          <div className="inline-flex items-center rounded-full bg-[#e9f3e9] p-1">
-            <img src="/Logo.jpeg" alt="" className="h-8 w-8 rounded-full object-cover" />
-            <span className="px-3 py-1 text-sm font-semibold text-[#174c2c]">Khet Rakshak</span>
-          </div>
+          <p className="inline-flex items-center gap-2 rounded-full bg-[#e9f3e9] px-4 py-2 text-base font-semibold text-[#174c2c]"><Sprout aria-hidden="true" className="h-5 w-5" /> Khet Rakshak</p>
           <h1 className="mt-6 max-w-2xl text-3xl font-bold leading-tight text-[#17251c] dark:text-white sm:text-5xl">{t.landing_title}</h1>
           <p className="mt-4 max-w-2xl text-lg leading-8 text-[#465449] dark:text-[#c2cec3]">{t.landing_subtitle}</p>
           <button onClick={() => onNavigate('login')} className="mt-7 min-h-12 w-full rounded-xl bg-[#176b3a] px-6 py-3 text-lg font-bold text-white hover:bg-[#12532d] sm:w-auto">

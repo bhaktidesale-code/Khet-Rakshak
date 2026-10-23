@@ -340,7 +340,7 @@ export default function Navigation({
                 ? [['operator-dash', t.operator_dashboard]]
                 : currentRole === 'outlet_manager'
                   ? [['manager-dash', t.manager_dashboard]]
-                  : [['admin-dash', t.admin_dashboard], ['operator-dash', t.operator_dashboard]]
+                  : [['admin-dash', t.admin_dashboard]]
             ).map(([view, label]) => (
               <button key={view} onClick={() => onViewChange(view)} aria-current={currentView === view ? 'page' : undefined}
                 className={`min-h-11 rounded-lg px-4 text-base font-semibold ${currentView === view ? 'bg-[#e9f3e9] text-[#174c2c] dark:bg-[#263e2e] dark:text-[#a5e8b5]' : 'text-[#465449] hover:bg-[#f1f7f1] dark:text-[#c2cec3] dark:hover:bg-[#23372a]'}`}>
@@ -442,16 +442,10 @@ export default function Navigation({
                 )}
 
                 {currentRole === 'admin' && (
-                  <>
-                    <button onClick={() => { onViewChange('admin-dash'); setIsMobileMenuOpen(false); }} className={getNavClass('admin-dash')} id="mob-nav-admin">
-                      <LayoutDashboard className="w-5 h-5" />
-                      <span>{t.admin_dashboard}</span>
-                    </button>
-                    <button onClick={() => { onViewChange('operator-dash'); setIsMobileMenuOpen(false); }} className={getNavClass('operator-dash')} id="mob-nav-admin-operator">
-                      <LayoutDashboard className="w-5 h-5" />
-                      <span>{t.operator_dashboard}</span>
-                    </button>
-                  </>
+                  <button onClick={() => { onViewChange('admin-dash'); setIsMobileMenuOpen(false); }} className={getNavClass('admin-dash')} id="mob-nav-admin">
+                    <LayoutDashboard className="w-5 h-5" />
+                    <span>{t.admin_dashboard}</span>
+                  </button>
                 )}
               </div>
             </div>

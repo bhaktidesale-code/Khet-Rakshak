@@ -13,7 +13,6 @@ export type AppRole = 'FARMER' | 'DRONE_PILOT' | 'OUTLET_MANAGER' | 'ADMIN';
 
 export interface AppUser {
   id: string;
-  farmerId: string | null;
   email: string | null;
   fullName: string;
   mobileNumber: string | null;
@@ -53,73 +52,6 @@ export interface OperatorAssignment {
   crop: string;
   scheduledAt: string;
   status: string;
-}
-
-export interface OperatorFarm {
-  id: string;
-  name: string;
-  location: string;
-  crop: string;
-  areaAcres: number;
-}
-
-export interface OperatorFarmer {
-  farmerId: string;
-  fullName: string;
-  village: string;
-  farms: OperatorFarm[];
-}
-
-export interface DroneUploadResult {
-  clientImageId: string;
-  imageId?: string;
-  filename: string;
-  status: 'uploaded' | 'failed';
-  message?: string;
-}
-
-export interface DroneUploadResponse {
-  batchId: string;
-  farmer: Pick<OperatorFarmer, 'farmerId' | 'fullName' | 'village'>;
-  farm: Pick<OperatorFarm, 'id' | 'name'>;
-  uploadedCount: number;
-  expectedCount: number;
-  status: 'UPLOADING' | 'COMPLETED' | 'PARTIAL';
-  results: DroneUploadResult[];
-}
-
-export interface DroneUploadBatch {
-  id: string;
-  status: string;
-  expectedImageCount: number;
-  uploadedCount: number;
-  createdAt: string;
-  completedAt: string | null;
-  farmerId: string;
-  farmerName: string;
-  farmName: string;
-  location: string;
-  crop: string;
-}
-
-export interface FarmerDroneImage {
-  id: string;
-  filename: string;
-  fileSizeBytes: number;
-  mimeType: string;
-  width: number;
-  height: number;
-  capturedAt: string | null;
-  gps: { latitude: number; longitude: number } | null;
-  analysisStatus: string;
-  uploadedAt: string;
-  farm: { id: string; name: string; location: string; crop: string };
-  batchId: string;
-}
-
-export interface DroneUploadFile {
-  file: File;
-  clientImageId: string;
 }
 
 export type CropType = 'cotton' | 'turmeric' | 'other' | 'unknown';
@@ -200,106 +132,6 @@ export async function getPilotRoleRequests(user: User) {
 
 export async function getOperatorAssignments(user: User) {
   return authenticatedRequest<{ assignments: OperatorAssignment[] }>('/api/operator/assignments', user);
-}
-
-export async function findOperatorFarmer(user: User, farmerId: string): Promise<OperatorFarmer> {
-  const response = await authenticatedRequest<{ farmer: OperatorFarmer }>(
-    `/api/operator/farmers/${encodeURIComponent(farmerId)}`,
-    user,
-  );
-  return response.farmer;
-}
-
-export async function createDroneUpload(
-  user: User,
-  params: {
-    farmerId: string;
-    farmId: string;
-    batchId: string;
-    expectedImageCount: number;
-    files: DroneUploadFile[];
-  },
-  onProgress: (progress: number) => void,
-): Promise<DroneUploadResponse> {
-  if (!apiUrl) {
-    throw new Error('The API server is not configured for this deployment. Set VITE_API_URL and rebuild the frontend.');
-  }
-  const token = await user.getIdToken();
-  const formData = new FormData();
-  formData.append('farmerId', params.farmerId);
-  formData.append('farmId', params.farmId);
-  formData.append('batchId', params.batchId);
-  formData.append('expectedImageCount', String(params.expectedImageCount));
-  for (const item of params.files) {
-    formData.append('images', item.file, item.file.name);
-    formData.append('imageIds', item.clientImageId);
-  }
-  return new Promise((resolve, reject) => {
-    const request = new XMLHttpRequest();
-    request.open('POST', `${apiUrl}/api/operator/drone-uploads`);
-    request.setRequestHeader('Authorization', `Bearer ${token}`);
-    request.upload.onprogress = (event) => {
-      if (event.lengthComputable) onProgress(Math.round((event.loaded / event.total) * 100));
-    };
-    request.onerror = () => reject(new Error(`Cannot reach the Khet Rakshak API at ${apiUrl}. Check the API URL and CORS settings.`));
-    request.onabort = () => reject(new Error('The upload was cancelled before the server confirmed completion.'));
-    request.onload = () => {
-      let body: unknown;
-      try {
-        body = JSON.parse(request.responseText);
-      } catch {
-        reject(new Error('The API returned an unexpected response for the image upload.'));
-        return;
-      }
-      if (request.status < 200 || request.status >= 300) {
-        const message = typeof body === 'object' && body !== null && 'message' in body
-          ? String(body.message)
-          : `Image upload failed with HTTP ${request.status}.`;
-        reject(new Error(message));
-        return;
-      }
-      onProgress(100);
-      resolve(body as DroneUploadResponse);
-    };
-    request.send(formData);
-  });
-}
-
-export async function getOperatorDroneUploads(user: User, farmerId = '') {
-  const query = farmerId ? `?farmerId=${encodeURIComponent(farmerId)}` : '';
-  return authenticatedRequest<{ uploads: DroneUploadBatch[] }>(
-    `/api/operator/drone-uploads${query}`,
-    user,
-  );
-}
-
-export async function getFarmerFarms(user: User): Promise<OperatorFarm[]> {
-  const response = await authenticatedRequest<{ farms: OperatorFarm[] }>('/api/farmer/farms', user);
-  return response.farms;
-}
-
-export async function saveFarmerFarm(
-  user: User,
-  farm: { name: string; location: string; crop: string; areaAcres: number },
-): Promise<OperatorFarm> {
-  const response = await authenticatedRequest<{ farm: OperatorFarm }>('/api/farmer/farms', user, {
-    method: 'POST',
-    body: JSON.stringify(farm),
-  });
-  return response.farm;
-}
-
-export async function getFarmerDroneImages(user: User): Promise<FarmerDroneImage[]> {
-  const response = await authenticatedRequest<{ images: FarmerDroneImage[] }>('/api/farmer/drone-images', user);
-  return response.images;
-}
-
-export async function getDroneImageUrl(user: User, imageId: string, audience: 'farmer' | 'operator') {
-  const endpoint = audience === 'farmer' ? '/api/farmer/drone-images' : '/api/operator/drone-images';
-  return authenticatedRequest<{ url: string; expiresInSeconds: number }>(
-    `${endpoint}/${encodeURIComponent(imageId)}/url`,
-    user,
-  );
 }
 
 export async function submitCropImage(
