@@ -50,7 +50,7 @@ function createAuthenticationMiddleware({
              THEN EXCLUDED.full_name ELSE app_user.full_name END,
            mobile_number = COALESCE(EXCLUDED.mobile_number, app_user.mobile_number),
            updated_at = NOW()
-         RETURNING id, firebase_uid, email, full_name, mobile_number, village,
+         RETURNING id, firebase_uid, farmer_id, email, full_name, mobile_number, village,
                    role, account_status`,
         [
           decoded.uid,

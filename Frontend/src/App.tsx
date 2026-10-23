@@ -32,15 +32,19 @@ import SensorDashboard from './components/SensorDashboard';
 import CropAdvisory from './components/CropAdvisory';
 import ExpertConsultation from './components/ExpertConsultation';
 import OtherDashboards from './components/OtherDashboards';
+import DroneOperatorPortal from './components/DroneOperatorPortal';
+import FarmerDroneGallery from './components/FarmerDroneGallery';
 import WalletPayments from './components/WalletPayments';
 import { EmptyState, StatusBadge } from './components/Ui';
 import {
   AppRole,
   AppUser,
   getApplicationUser,
+  getFarmerFarms,
   logout,
   observeAuth,
   requestDronePilotAccess,
+  OperatorFarm,
 } from './services/authService';
 import { firebaseAuth } from './services/firebase';
 
@@ -64,6 +68,24 @@ function hasCompleteProfile(user: AppUser) {
   return Boolean(user.fullName.trim() && user.village.trim());
 }
 
+function toFarm(farm: OperatorFarm): Farm {
+  return {
+    id: farm.id,
+    name: farm.name,
+    location: farm.location,
+    area: farm.areaAcres,
+    areaUnit: 'acre',
+    crop: farm.crop,
+    sowingDate: '',
+    irrigationType: 'unknown',
+    latestHealthScore: null,
+    lastScanDate: 'Not scanned',
+    nextScanDate: 'Not scheduled',
+    activeAlertsCount: 0,
+    boundary: [],
+  };
+}
+
 function isViewAllowed(view: string, role: AppRole) {
   if (view === 'home' || view === 'login' || view === 'profile-setup' || view === 'crop-demo' || view === 'farm-health-demo') return true;
   if (role === 'FARMER') {
@@ -74,7 +96,7 @@ function isViewAllowed(view: string, role: AppRole) {
   }
   if (role === 'DRONE_PILOT') return view === 'operator-dash';
   if (role === 'OUTLET_MANAGER') return view === 'manager-dash';
-  return role === 'ADMIN' && view === 'admin-dash';
+  return role === 'ADMIN' && ['admin-dash', 'operator-dash'].includes(view);
 }
 
 export default function App() {
@@ -107,8 +129,23 @@ export default function App() {
   };
 
   const handleAddFarm = (newFarm: Farm) => {
-    setRegisteredFarms([...registeredFarms, newFarm]);
+    setRegisteredFarms((current) => [...current, newFarm]);
     setActiveFarm(newFarm);
+  };
+
+  const loadFarmerFarms = async (firebaseUser: FirebaseUser) => {
+    try {
+      const farms = await getFarmerFarms(firebaseUser);
+      const mappedFarms = farms.map(toFarm);
+      setRegisteredFarms(mappedFarms);
+      setActiveFarm((current) => mappedFarms.find((farm) => farm.id === current?.id) || mappedFarms[0] || null);
+    } catch (error) {
+      setRegisteredFarms([]);
+      setActiveFarm(null);
+      setAuthNotice(error instanceof Error
+        ? `Farm records could not be loaded: ${error.message}`
+        : 'Farm records could not be loaded. Please try again later.');
+    }
   };
 
   // --- Live Wallet Balance ---
@@ -252,6 +289,8 @@ export default function App() {
       if (!firebaseUser) {
         setAuthUser(null);
         setCurrentRole('guest');
+        setRegisteredFarms([]);
+        setActiveFarm(null);
         if (currentViewRef.current !== 'home' && currentViewRef.current !== 'login') {
           setCurrentView('home');
         }
@@ -260,9 +299,14 @@ export default function App() {
       }
       setAuthLoading(true);
       void getApplicationUser(firebaseUser)
-        .then((user) => {
+        .then(async (user) => {
           setAuthUser(user);
           setCurrentRole(toFrontendRole(user.role));
+          if (user.role === 'FARMER') await loadFarmerFarms(firebaseUser);
+          else {
+            setRegisteredFarms([]);
+            setActiveFarm(null);
+          }
           if (!user.fullName || !user.village) {
             setCurrentView('profile-setup');
           } else if (currentViewRef.current === 'home' || currentViewRef.current === 'login') {
@@ -311,6 +355,11 @@ export default function App() {
     setIdentity(firebaseUser);
     setAuthUser(user);
     setCurrentRole(toFrontendRole(user.role));
+    if (user.role === 'FARMER') await loadFarmerFarms(firebaseUser);
+    else {
+      setRegisteredFarms([]);
+      setActiveFarm(null);
+    }
     if (!hasCompleteProfile(user)) {
       setCurrentView('profile-setup');
       return;
@@ -509,8 +558,9 @@ export default function App() {
         )}
 
         {/* Logged-In Farmer views */}
-        {!authLoading && currentView === 'register' && authUser?.role === 'FARMER' && (
+        {!authLoading && currentView === 'register' && authUser?.role === 'FARMER' && identity && (
           <FarmSetup
+            identity={identity}
             onCancel={() => handleNavigate('farms')}
             onSave={(farm) => {
               handleAddFarm(farm);
@@ -528,6 +578,7 @@ export default function App() {
                   <p className="text-base font-semibold text-[#176b3a] dark:text-[#a5e8b5]">{t.welcome}{userName ? `, ${userName}` : ''}</p>
                   <h1 id="farmer-home-title" className="mt-2 text-3xl font-bold leading-tight text-[#17251c] dark:text-white sm:text-4xl">{t.farmer_dashboard}</h1>
                   <p className="mt-2 text-lg text-[#465449] dark:text-[#c2cec3]">{activeFarm ? `${activeFarm.name} | ${activeFarm.location}` : userVillage ? `Village: ${userVillage}` : 'Manage your farm details and find services here.'}</p>
+                  {authUser.farmerId && <p className="mt-2 text-sm text-[#465449] dark:text-[#c2cec3]">Farmer ID: <strong>{authUser.farmerId}</strong> · Share this ID with your authorized drone operator.</p>}
                 </header>
                 <h2 className="text-2xl font-bold text-[#17251c] dark:text-white">{t.dashboard_prompt}</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -543,7 +594,7 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-                <EmptyState title={t.farmer_dashboard} detail={t.session_data_note} />
+                {identity && <FarmerDroneGallery identity={identity} />}
               </section>
             )}
 
@@ -552,8 +603,8 @@ export default function App() {
               <div className="space-y-6">
                 <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm space-y-4">
                   <h2 className="font-display font-bold text-lg text-emerald-950 dark:text-white">Registered Land Plots</h2>
-                  <p className="text-xs text-gray-500">These farm details stay in this browser session. They are not saved to your account or available on another device.</p>
-                  {registeredFarms.length === 0 && <p className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-300">No plots have been added in this session yet.</p>}
+                  <p className="text-xs text-gray-500">Your saved plots can be selected by an authorized drone operator for image uploads.</p>
+                  {registeredFarms.length === 0 && <p className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600 dark:bg-gray-800 dark:text-gray-300">No saved plots yet. Add a farm to make it available for operator uploads.</p>}
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {registeredFarms.map((f) => (
@@ -574,7 +625,7 @@ export default function App() {
                             {f.crop}
                           </span>
                         </div>
-                        <p className="mt-3 border-t border-dashed pt-3 text-xs text-gray-600">Farm details are saved in this browser session only. Crop health is unavailable until a real scan report is connected.</p>
+                        <p className="mt-3 border-t border-dashed pt-3 text-xs text-gray-600">Crop health is unavailable until a real scan report is connected.</p>
                         <button 
                           onClick={() => handleSelectFarm(f)}
                           className="w-full mt-4 py-2 bg-emerald-700 text-white rounded-xl text-xs font-bold"
@@ -627,14 +678,12 @@ export default function App() {
         )}
 
         {/* Operator Dashboard view */}
-        {!authLoading && authUser?.role === 'DRONE_PILOT' && currentView === 'operator-dash' && (
-          <OtherDashboards
-            currentLanguage={currentLanguage}
-            currentTheme={currentTheme}
-            currentRole="drone_pilot"
-            identity={identity || undefined}
-            userName={userName}
-          />
+        {!authLoading && authUser?.role === 'DRONE_PILOT' && currentView === 'operator-dash' && identity && (
+          <DroneOperatorPortal identity={identity} userName={userName} />
+        )}
+
+        {!authLoading && authUser?.role === 'ADMIN' && currentView === 'operator-dash' && identity && (
+          <DroneOperatorPortal identity={identity} userName={userName} />
         )}
 
         {/* Manager Dashboard view */}

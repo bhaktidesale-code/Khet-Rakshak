@@ -53,7 +53,21 @@ The local default port is 5000. The service listens on `0.0.0.0` and uses the pl
 - `POST /api/crop-analysis` accepts a multipart `image`, `cropType` (`cotton`, `turmeric`, `other`, or `unknown`), and `cropTypeSource`. It requires an active `FARMER` Firebase identity, accepts JPEG/PNG/WebP up to 8 MB and 16 megapixels, and is limited to 10 requests per IP per 15 minutes. Sharp validates and decodes the image for a readability/dimension check. It does not identify blur, crop species, disease, or severity.
 - `GET /api/crop-analysis/:analysisId` retrieves the result for its owning farmer only. Results are kept in bounded process memory for at most 15 minutes; they are lost on restart and are not shared between API instances. The uploaded image is never written to disk or persisted in PostgreSQL.
 - No validated cotton/turmeric disease model is included or configured. The current result is explicitly `image_quality_only` with `model_unavailable` (or `unsupported_crop` for “Other”), null prediction, and null confidence. This must not be presented as a disease diagnosis.
-- No analysis history or farm schema exists. Persistent reports are intentionally not implemented and no database migration is required for this temporary workflow. Before saving farm reports, review a migration that adds a minimal `farms` table (`id`, `owner_user_id`, and required farm identity fields) and a `crop_analysis_runs` table (`id`, `owner_user_id`, `farm_id`, submitted crop/source, original filename, analysis status, nullable result/model metadata, and `created_at`). Enforce farm ownership with a composite foreign key from `(farm_id, owner_user_id)` to the farm owner key. Do not include an image URL or blob unless a separate authorized image-retention policy is approved. The current frontend farm records are session-only, so a report cannot yet be associated with a durable farm.
+
+## Private drone image workflow
+
+Drone images are retained as private files and are never served from the public frontend assets:
+
+- `GET /api/farmer/farms` and `POST /api/farmer/farms` list and save farms for the signed-in farmer only.
+- `GET /api/operator/farmers/:farmerId` verifies an active Farmer ID and returns that farmer's farm list without exposing contact details.
+- `POST /api/operator/drone-uploads` accepts up to eight JPEG/PNG images per visit, at most 15 MB each. It requires an active `DRONE_PILOT` or `ADMIN` identity, farmer/farm confirmation, and server-side ownership verification. Client image identifiers make retries idempotent.
+- `GET /api/operator/drone-uploads` returns the signed-in operator's upload history. Administrators may review all batches.
+- `GET /api/farmer/drone-images` returns only the signed-in farmer's images. `GET /api/farmer/drone-images/:imageId/url` and the corresponding operator URL route create short-lived signed URLs only after checking owner/operator authorization.
+- The backend validates the decoded image with Sharp, records the original filename, MIME type, byte size, dimensions, SHA-256 digest, upload timestamp, and available EXIF capture time/GPS, and leaves absent or unreadable EXIF values null. EXIF capture times have no timezone unless the source embeds one; the stored capture time preserves the camera's wall-clock value without inventing a timezone. Original image bytes (including metadata) are retained in private storage.
+- Drone-image diagnosis is unavailable: no validated model is configured. `analysis_status` is `unavailable`; this workflow does not return disease labels, severity, or confidence.
+- Migration `003_drone_image_workflow.sql` adds Farmer IDs, farmer-owned farm records, upload batches, and drone-image metadata. It is additive and is required before using these routes. Do not run it against production until the exact database target has been verified through the confirmation-gated migration workflow.
+- Create a private Supabase Storage bucket (default name `drone-images`) and configure `SUPABASE_STORAGE_URL` (or `SUPABASE_URL`), `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_STORAGE_BUCKET` only in the backend environment. Never expose the service-role key to Vite or the browser. Uploads return an explicit service-unavailable response when private storage is not configured.
+- Storage deletion, retention periods, backups, and farmer deletion requests must follow the deployment's data-retention policy. No migration has been applied and no production storage/database was accessed as part of this code change.
 
 ## Deploy on Render
 
@@ -65,6 +79,9 @@ Use this directory as the Render Web Service **Root Directory**, `npm ci` as **B
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Recommended for Render: the complete service-account JSON object, pasted as the value of a secret environment variable. Its `project_id` must match `FIREBASE_PROJECT_ID`. |
 | `DATABASE_URL` | PostgreSQL connection URL. |
 | `FRONTEND_URL` | Exact deployed frontend origin, e.g. `https://your-app.vercel.app`. |
+| `SUPABASE_STORAGE_URL` | Supabase project URL used by the private image storage adapter. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Backend-only Supabase service-role key; never use a `VITE_` prefix. |
+| `SUPABASE_STORAGE_BUCKET` | Name of the existing private image bucket. |
 
 Alternatively, omit `FIREBASE_SERVICE_ACCOUNT_JSON` only if ADC is configured for the Render service. `GOOGLE_APPLICATION_CREDENTIALS` is an absolute file path, not JSON content; it works only if the credential file exists at that path on the Render instance. Setting it does not upload a file. The service account must belong to the configured Firebase project and have permission to verify Firebase Authentication tokens. Never put Admin credentials in a `VITE_*` variable.
 

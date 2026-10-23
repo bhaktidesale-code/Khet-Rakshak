@@ -15,8 +15,8 @@ export interface Farm {
   areaUnit: 'acre' | 'hectare' | 'guntha';
   crop: string;
   sowingDate: string;
-  irrigationType: 'drip' | 'sprinkler' | 'flood' | 'rainfed';
-  latestHealthScore: number;
+  irrigationType: 'drip' | 'sprinkler' | 'flood' | 'rainfed' | 'unknown';
+  latestHealthScore: number | null;
   lastScanDate: string;
   nextScanDate: string;
   activeAlertsCount: number;

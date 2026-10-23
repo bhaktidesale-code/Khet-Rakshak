@@ -164,6 +164,7 @@ async function main() {
         .filter((relation) => !existingRelations.has(relation));
       existingSchemaReady = await checkApplicationSchema(pool, {
         skipTables: missingRelations,
+        skipDroneWorkflow: status.pending.some((migration) => migration.name === "drone_image_workflow"),
       });
       if (missingRelations.length) {
         const otherSchemaRelations = await pool.query(
